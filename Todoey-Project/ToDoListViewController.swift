@@ -12,7 +12,7 @@ import UIKit
 //the delegate is seen already as this own class
 class ToDoListViewController: UITableViewController {
 
-    let itemArray = ["Item 1", "Item 2", "Item 3"]
+    var itemArray = ["Item 1", "Item 2", "Item 3"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,7 +32,7 @@ class ToDoListViewController: UITableViewController {
         cell?.textLabel?.text = itemArray[indexPath.row]
         return cell!
     }
-    // MARK: - TableView Delegate Methods
+    // MARK: - Allowing table view cells to be tapped and react
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //this fct communicates with the delegate. Since we're using a TVC, this own class is the delegate already
@@ -51,5 +51,46 @@ class ToDoListViewController: UITableViewController {
         //setting the animation to de-select an item (make the gray highlight disappear
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+    //MARK: - Designing button to add new items to list using alarms
+    
+    @IBAction func didAddNewItem(_ sender: Any) {
+        //creating alert icon
+        let alert = UIAlertController(title: "Add new Todoey Item", message: "", preferredStyle: .alert)
+        
+        //creating this variable to store the input from the alert
+        //alert input is origianlly only a local var within a closure
+        var userInput = UITextField()
+        
+        //create possible action to perform when alert is shown
+        //this is called when "add item" is pressed
+        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            print("user tapped to add item")
+                //"add item" is shown in the UI
+                //print is called when user taps in the action "add item"
+            
+            //userInput is set to receive its value in alert.addTextField, but can't pass values there, bc it will pass the value it has before receiving the user input. so instead, its value will be passed to itemArray here
+            self.itemArray.append(userInput.text!)
+            
+            //reloading tableview data to display new entries in list
+            self.tableView.reloadData()
+            
+        }
+        
+        //adding default grayed out message in the input box
+        //only triggered when textfield is added
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "Create new item"
+            userInput = alertTextField
+        }
+        
+        //adding the action button created to the alert
+        alert.addAction(action)
+        
+        //presenting the alert
+        present(alert, animated: true, completion: nil)
+    }
+    
+
 }
 
