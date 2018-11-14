@@ -31,10 +31,32 @@ class ToDoListViewController: UITableViewController {
         itemArray.append(item1)
         itemArray.append(item2)
         itemArray.append(item3)
-//        //loading list saved in defaults. "if" statement used to make sure the defaults file exist already, or else app will break
-//        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
-//            itemArray = items
-//        }
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
+        
+        
+        //loading list saved in defaults. "if" statement used to make sure the defaults file exist already, or else app will break
+        if let items = defaults.array(forKey: "TodoListArray") as? [ListDataModel] {
+            itemArray = items
+        }
     }
     
     
@@ -43,31 +65,33 @@ class ToDoListViewController: UITableViewController {
         return itemArray.count
     }
     
-    //set properties of table view cell
+    //set properties of cells that are currently being displayed
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        //first call: when tableview gets loaded. Ad taht point, no item is loaded yet, even viewDidLoad. other calls: whenever tableView.reloadData() happens
         
         //creating cell. identifier must match cell name seen in document outline
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell")
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
         //passing the string stored in itemArray.ItemObject.ItemContent to the cells
-        cell?.textLabel?.text = itemArray[indexPath.row].itemContent
-        return cell!
+        cell.textLabel?.text = itemArray[indexPath.row].itemContent
+        
+        //defining if cells should have a checkmark or not, using ternary:
+        cell.accessoryType = itemArray[indexPath.row].checked ? .checkmark : .none
+        
+        return cell
     }
+    
+    
     // MARK: - Allowing table view cells to be tapped and react
     
-    //this fct communicates with the delegate. Since we're using a TVC, this own class is the delegate already
+    //triggered when user taps at a row in table view. communicates with the delegate. Since we're using a TVC, this own class is the delegate already
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(itemArray[indexPath.row])
         
-        //this constant is created to facilitate writing the if statement below
-        let checkStatus = tableView.cellForRow(at: indexPath)?.accessoryType
+        //updating checked parameter in the item objects. In tableView(cellForRowAt) checked parameter will be used to change check marks in UI
+        itemArray[indexPath.row].checked = !itemArray[indexPath.row].checked
         
-        //checking / unchecking the cell
-        if checkStatus == .checkmark {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        } else {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        }
+        //reloading cells, forces tableView(cellForRowAt) to be called again
+        tableView.reloadData()
         
         //setting the animation to de-select an item (make the gray highlight disappear
         tableView.deselectRow(at: indexPath, animated: true)
@@ -96,7 +120,7 @@ class ToDoListViewController: UITableViewController {
             
 //            //setting defaults constant to store list in a plist with key "TodoListArray"
 //            self.defaults.set(self.itemArray, forKey: "TodoListArray")
-//
+
             //reloading tableview data to display new entries in list
             self.tableView.reloadData()
             
