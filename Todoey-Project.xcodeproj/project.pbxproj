@@ -14,6 +14,7 @@
 		121508F1219A435D00AFA6F3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 121508EF219A435D00AFA6F3 /* LaunchScreen.storyboard */; };
 		121508FC219A435D00AFA6F3 /* Todoey_ProjectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121508FB219A435D00AFA6F3 /* Todoey_ProjectTests.swift */; };
 		12150907219A435D00AFA6F3 /* Todoey_ProjectUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12150906219A435D00AFA6F3 /* Todoey_ProjectUITests.swift */; };
+		12150915219B9E2700AFA6F3 /* ListDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12150914219B9E2700AFA6F3 /* ListDataModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +48,7 @@
 		12150902219A435D00AFA6F3 /* Todoey-ProjectUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Todoey-ProjectUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		12150906219A435D00AFA6F3 /* Todoey_ProjectUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Todoey_ProjectUITests.swift; sourceTree = "<group>"; };
 		12150908219A435D00AFA6F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		12150914219B9E2700AFA6F3 /* ListDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDataModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +105,7 @@
 				121508ED219A435D00AFA6F3 /* Assets.xcassets */,
 				121508EF219A435D00AFA6F3 /* LaunchScreen.storyboard */,
 				121508F2219A435D00AFA6F3 /* Info.plist */,
+				12150914219B9E2700AFA6F3 /* ListDataModel.swift */,
 			);
 			path = "Todoey-Project";
 			sourceTree = "<group>";
@@ -256,6 +259,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				12150915219B9E2700AFA6F3 /* ListDataModel.swift in Sources */,
 				121508E9219A435B00AFA6F3 /* ToDoListViewController.swift in Sources */,
 				121508E7219A435B00AFA6F3 /* AppDelegate.swift in Sources */,
 			);
