@@ -9,7 +9,7 @@
 import Foundation
 
 //this class was developed to handle the entries in the list
-class ListDataModel {
+class ListDataModel: Codable {
     
     var itemContent = ""
     var checked = false

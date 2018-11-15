@@ -15,48 +15,26 @@ class ToDoListViewController: UITableViewController {
     //creting an array of objects of type ListDataModel
     var itemArray = [ListDataModel]()
     
-    //creating constant to store values after app is terminated
-    let defaults = UserDefaults.standard
+    //obtaining filepath where data can be stored (more in intro to xcode.h) and appending a new plist to it
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let item1 = ListDataModel(_itemContent: "Find Mike", _checked: false)
+        print(dataFilePath!)
         
-        let item2 = ListDataModel(_itemContent: "Buy Eggos", _checked: false)
+//        let item1 = ListDataModel(_itemContent: "Find Mike", _checked: false)
+//
+//        let item2 = ListDataModel(_itemContent: "Buy Eggos", _checked: false)
+//
+//        let item3 = ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false)
+//
+//        itemArray.append(item1)
+//        itemArray.append(item2)
+//        itemArray.append(item3)
+        loadItems()
         
-        let item3 = ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false)
-        
-        itemArray.append(item1)
-        itemArray.append(item2)
-        itemArray.append(item3)
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        itemArray.append(ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false))
-        
-        
-        //loading list saved in defaults. "if" statement used to make sure the defaults file exist already, or else app will break
-        if let items = defaults.array(forKey: "TodoListArray") as? [ListDataModel] {
-            itemArray = items
-        }
     }
     
     
@@ -69,7 +47,7 @@ class ToDoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         //first call: when tableview gets loaded. Ad taht point, no item is loaded yet, even viewDidLoad. other calls: whenever tableView.reloadData() happens
         
-        //creating cell. identifier must match cell name seen in document outline
+        //creating cell. withIdentifier must match cell name seen in document outline
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
         //passing the string stored in itemArray.ItemObject.ItemContent to the cells
@@ -90,8 +68,8 @@ class ToDoListViewController: UITableViewController {
         //updating checked parameter in the item objects. In tableView(cellForRowAt) checked parameter will be used to change check marks in UI
         itemArray[indexPath.row].checked = !itemArray[indexPath.row].checked
         
-        //reloading cells, forces tableView(cellForRowAt) to be called again
-        tableView.reloadData()
+        //saving data again, to update "checked" status in the plist
+        saveItems()
         
         //setting the animation to de-select an item (make the gray highlight disappear
         tableView.deselectRow(at: indexPath, animated: true)
@@ -118,12 +96,8 @@ class ToDoListViewController: UITableViewController {
             let newItem = ListDataModel(_itemContent: userInput.text!, _checked: false)
             self.itemArray.append(newItem)
             
-//            //setting defaults constant to store list in a plist with key "TodoListArray"
-//            self.defaults.set(self.itemArray, forKey: "TodoListArray")
-
-            //reloading tableview data to display new entries in list
-            self.tableView.reloadData()
-            
+            //conforming itemArray to the plist format and saving it in the desired directory
+            self.saveItems()
         }
         
         //adding default grayed out message in the input box
@@ -140,6 +114,41 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    //thic fct creates an encoder, encodes itemArray and then writes it in the filepath as a p-list
+    func saveItems(){
+        //creating encoder object that will transform data in plist type and add it to the specified filepath
+        let encoder = PropertyListEncoder()
+        
+        do {
+            //encoding itemArray, to be written in the filepath later
+            let data = try encoder.encode(self.itemArray)
+            //writing data to filepath
+            try data.write(to: self.dataFilePath!)
+        } catch {
+            print("Error encoding array, \(error)")
+        }
+        
+        //reloading tableview data to display new entries in list. forces tableView(cellForRowAt) to be called again
+        self.tableView.reloadData()
+
+    }
+    
+    func loadItems(){
+        //try to find data in the filePath indicated. If it exists, load it
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            //create the decoder object
+            let decoder = PropertyListDecoder()
+            
+            //assign decoded data from filePath to itemArray
+            do {
+            itemArray = try decoder.decode([ListDataModel].self, from: data)
+                //ListDataModel is the file type of the element we're trying to decode
+                //from: data what will be decoded to the specified file format
+            } catch {
+                print("error: \(error)")
+            }
+        }
+    }
 
 }
 
