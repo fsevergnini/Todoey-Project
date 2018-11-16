@@ -7,33 +7,27 @@
 //
 
 import UIKit
+import CoreData
 
-//when creating a class that inherits from UITVC, there is no need to implement the TV protocols, delegate or datasource
-//the delegate is seen already as this own class
+//when creating a class that inherits from UITVC, there is no need to implement the TV protocols, delegate or datasource, delegate is seen already as this own class
 class ToDoListViewController: UITableViewController {
 
+    @IBOutlet weak var searchBar: UISearchBar!
     //creting an array of objects of type ListDataModel
     var itemArray = [ListDataModel]()
     
-    //obtaining filepath where data can be stored (more in intro to xcode.h) and appending a new plist to it
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
-    
+    //creating obj to acces AppDelegate to use its persistentContainer variable
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        print(dataFilePath!)
-        
-//        let item1 = ListDataModel(_itemContent: "Find Mike", _checked: false)
-//
-//        let item2 = ListDataModel(_itemContent: "Buy Eggos", _checked: false)
-//
-//        let item3 = ListDataModel(_itemContent: "Destroy Demogorgon", _checked: false)
-//
-//        itemArray.append(item1)
-//        itemArray.append(item2)
-//        itemArray.append(item3)
+        //loading saved files to the list
         loadItems()
+        
+        searchBar.delegate = self
         
     }
     
@@ -93,7 +87,14 @@ class ToDoListViewController: UITableViewController {
                 //print is called when user taps in the action "add item"
             
             //userInput is set to receive its value in alert.addTextField, but can't pass values there, bc it will pass the value it has before receiving the user input. so instead, its value will be passed to itemArray here
-            let newItem = ListDataModel(_itemContent: userInput.text!, _checked: false)
+            
+            //creating new obj using the entity ListDataModel
+            let newItem = ListDataModel(context: self.context)
+            
+            //adding data to newItem, which is stored in "context" object
+            newItem.itemContent = userInput.text
+            newItem.checked = false
+            
             self.itemArray.append(newItem)
             
             //conforming itemArray to the plist format and saving it in the desired directory
@@ -114,18 +115,14 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    //thic fct creates an encoder, encodes itemArray and then writes it in the filepath as a p-list
+    //send data to permanent storage inside persistentContainer
     func saveItems(){
-        //creating encoder object that will transform data in plist type and add it to the specified filepath
-        let encoder = PropertyListEncoder()
         
         do {
-            //encoding itemArray, to be written in the filepath later
-            let data = try encoder.encode(self.itemArray)
-            //writing data to filepath
-            try data.write(to: self.dataFilePath!)
+            //saving to context
+            try context.save()
         } catch {
-            print("Error encoding array, \(error)")
+            print("Error saving context \(error)")
         }
         
         //reloading tableview data to display new entries in list. forces tableView(cellForRowAt) to be called again
@@ -133,22 +130,69 @@ class ToDoListViewController: UITableViewController {
 
     }
     
-    func loadItems(){
-        //try to find data in the filePath indicated. If it exists, load it
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            //create the decoder object
-            let decoder = PropertyListDecoder()
-            
-            //assign decoded data from filePath to itemArray
+    func loadItems(with request: NSFetchRequest<ListDataModel> = ListDataModel.fetchRequest()){
+        //using "with" before specifying the variable allows us to call the fct omitting the variable name, just using "with:" instead
+        //by using the "=", this will be set as the default value, if nothing is inserted
+        //NSFetchRequest: data type
+        //ListDataModel: entity requested
+        //in most cases it is unnecessary to declare things like this, but here it's mandatory
+        
             do {
-            itemArray = try decoder.decode([ListDataModel].self, from: data)
-                //ListDataModel is the file type of the element we're trying to decode
-                //from: data what will be decoded to the specified file format
+                //requesting ListDataModel inside context data
+                itemArray = try context.fetch(request)
             } catch {
-                print("error: \(error)")
+                print("error fetching data from context: \(error)")
             }
         }
-    }
-
 }
 
+//MARK: - Search Bar methods
+extension ToDoListViewController: UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        //defining request to be used in loadItems
+        let request: NSFetchRequest<ListDataModel> = ListDataModel.fetchRequest()
+        
+        //defining that the data should be fetched using the user input in searchBar
+        request.predicate = NSPredicate(format: "itemContent CONTAINS[cd] %@", searchBar.text!)
+            //itemContent: parameter from ListDataModel we want to look at
+            //CONTAINS %@: objective-c standard. Means it will look for whatever is set as argument, which in this case is "searchBNar.text!" realm cheat offers more info on useful operatos besides CONTAINS and %@
+            //[cd]: tells search to ignore case and diacritics (especial accents)
+        
+        //sort the results based on the itemContent and use alphabetical order
+        let sortDescriptor = NSSortDescriptor(key: "itemContent", ascending: true)
+            //ascending: set alphabetical order
+            //key: parameter used to sort results
+        
+        request.sortDescriptors = [sortDescriptor]
+            //this parameter expeccts an array of things to sort for, but we are giving only one item
+
+        loadItems(with: request)
+        
+        tableView.reloadData()
+        
+    }
+
+    
+    //this is called whenever there is a change in text in searchbar. allows clear icon to resume the regular list
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+            tableView.reloadData()
+            
+            //placing the cancellation of the search option in the foreground
+            DispatchQueue.main.async {
+                //DispatchQueue assigns projects to different threads
+                //actions here will happen in the main thread
+                
+                //cancelling search operation and hiding keyboard agian
+                searchBar.resignFirstResponder()
+            }
+            
+        }
+    }
+    
+    
+
+}
