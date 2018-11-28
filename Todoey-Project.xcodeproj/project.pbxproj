@@ -15,6 +15,7 @@
 		121508FC219A435D00AFA6F3 /* Todoey_ProjectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121508FB219A435D00AFA6F3 /* Todoey_ProjectTests.swift */; };
 		12150907219A435D00AFA6F3 /* Todoey_ProjectUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12150906219A435D00AFA6F3 /* Todoey_ProjectUITests.swift */; };
 		12150918219DF9A500AFA6F3 /* DataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 12150916219DF9A500AFA6F3 /* DataModel.xcdatamodeld */; };
+		1215095A219F6F5100AFA6F3 /* CategoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12150959219F6F5100AFA6F3 /* CategoryViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +50,7 @@
 		12150906219A435D00AFA6F3 /* Todoey_ProjectUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Todoey_ProjectUITests.swift; sourceTree = "<group>"; };
 		12150908219A435D00AFA6F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		12150917219DF9A500AFA6F3 /* DataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = DataModel.xcdatamodel; sourceTree = "<group>"; };
+		12150959219F6F5100AFA6F3 /* CategoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				121508E6219A435B00AFA6F3 /* AppDelegate.swift */,
+				12150959219F6F5100AFA6F3 /* CategoryViewController.swift */,
 				121508E8219A435B00AFA6F3 /* ToDoListViewController.swift */,
 				121508EA219A435B00AFA6F3 /* Main.storyboard */,
 				121508ED219A435D00AFA6F3 /* Assets.xcassets */,
@@ -267,6 +270,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1215095A219F6F5100AFA6F3 /* CategoryViewController.swift in Sources */,
 				12150918219DF9A500AFA6F3 /* DataModel.xcdatamodeld in Sources */,
 				121508E9219A435B00AFA6F3 /* ToDoListViewController.swift in Sources */,
 				121508E7219A435B00AFA6F3 /* AppDelegate.swift in Sources */,

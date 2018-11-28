@@ -12,7 +12,18 @@ import CoreData
 //when creating a class that inherits from UITVC, there is no need to implement the TV protocols, delegate or datasource, delegate is seen already as this own class
 class ToDoListViewController: UITableViewController {
 
+    //MARK: - Declaring global variables
+    
+    //selectCategory will be created once the user selects a list in the root table view
+    var selectCategory: NewList?{
+        //didSet is activated once the optional variable selectCategory is finally created
+        didSet{
+            loadItems()
+        }
+    }
+    
     @IBOutlet weak var searchBar: UISearchBar!
+    
     //creting an array of objects of type ListDataModel
     var itemArray = [ListDataModel]()
     
@@ -24,13 +35,11 @@ class ToDoListViewController: UITableViewController {
 
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        //loading saved files to the list
-        loadItems()
-        
         searchBar.delegate = self
         
     }
     
+    //MARK: - Configuring tableview
     
     //to set # of rows in table view
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -54,7 +63,7 @@ class ToDoListViewController: UITableViewController {
     }
     
     
-    // MARK: - Allowing table view cells to be tapped and react
+    //Allowing table view cells to be tapped and react
     
     //triggered when user taps at a row in table view. communicates with the delegate. Since we're using a TVC, this own class is the delegate already
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -94,7 +103,9 @@ class ToDoListViewController: UITableViewController {
             //adding data to newItem, which is stored in "context" object
             newItem.itemContent = userInput.text
             newItem.checked = false
-            
+            //defining the parent category
+            newItem.parentCategory = self.selectCategory
+    
             self.itemArray.append(newItem)
             
             //conforming itemArray to the plist format and saving it in the desired directory
@@ -115,6 +126,8 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    //MARK: - Save and load items
+    
     //send data to permanent storage inside persistentContainer
     func saveItems(){
         
@@ -125,28 +138,39 @@ class ToDoListViewController: UITableViewController {
             print("Error saving context \(error)")
         }
         
-        //reloading tableview data to display new entries in list. forces tableView(cellForRowAt) to be called again
+        //reloading tableview data to display new entries in list. forces tableView(cellForRowAt) to be called
         self.tableView.reloadData()
 
     }
     
-    func loadItems(with request: NSFetchRequest<ListDataModel> = ListDataModel.fetchRequest()){
-        //using "with" before specifying the variable allows us to call the fct omitting the variable name, just using "with:" instead
-        //by using the "=", this will be set as the default value, if nothing is inserted
-        //NSFetchRequest: data type
-        //ListDataModel: entity requested
-        //in most cases it is unnecessary to declare things like this, but here it's mandatory
+    func loadItems(with request: NSFetchRequest<ListDataModel> = ListDataModel.fetchRequest(), with predicate: NSPredicate? = nil){
+        //adding predicate as one of the optional parameters to call the function
+
+        //categoryPredicate is the predicate to be used when loading a list
+        let categoryPredicate = NSPredicate(format: "parentCategory.listName MATCHES %@", selectCategory!.listName!)
+            //parentCategory name must match what is stored in selectCategory.listName
         
-            do {
-                //requesting ListDataModel inside context data
-                itemArray = try context.fetch(request)
-            } catch {
-                print("error fetching data from context: \(error)")
-            }
+
+        //optional binding to check whether loadItems was called with a predicate or not
+        if let additionalPredicate = predicate {
+            //if loadItems was called with an additional predicate (happens in searchbar), then the total predicate will be the sum of the regular predicate that loads list items + predicate to search for something
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
         }
+        
+        do {
+            //requesting ListDataModel inside context data
+            itemArray = try context.fetch(request)
+        } catch {
+            print("error fetching data from context: \(error)")
+        }
+        
+        tableView.reloadData()
+    }
 }
 
-//MARK: - Search Bar methods
+//MARK: - Extending class to include Search Bar methods
 extension ToDoListViewController: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -155,7 +179,7 @@ extension ToDoListViewController: UISearchBarDelegate {
         let request: NSFetchRequest<ListDataModel> = ListDataModel.fetchRequest()
         
         //defining that the data should be fetched using the user input in searchBar
-        request.predicate = NSPredicate(format: "itemContent CONTAINS[cd] %@", searchBar.text!)
+        let predicate = NSPredicate(format: "itemContent CONTAINS[cd] %@", searchBar.text!)
             //itemContent: parameter from ListDataModel we want to look at
             //CONTAINS %@: objective-c standard. Means it will look for whatever is set as argument, which in this case is "searchBNar.text!" realm cheat offers more info on useful operatos besides CONTAINS and %@
             //[cd]: tells search to ignore case and diacritics (especial accents)
@@ -168,7 +192,7 @@ extension ToDoListViewController: UISearchBarDelegate {
         request.sortDescriptors = [sortDescriptor]
             //this parameter expeccts an array of things to sort for, but we are giving only one item
 
-        loadItems(with: request)
+        loadItems(with: request, with: predicate)
         
         tableView.reloadData()
         
