@@ -7,8 +7,7 @@
 //
 
 import UIKit
-import CoreData
-
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
 
@@ -20,17 +19,17 @@ class CategoryViewController: UITableViewController {
     
     //MARK: - Global variables for CategoryViewController
     
-    //creating array of objects of type NewList
-    var listArray = [NewList]()
+    //initializign realm to store data
+    let realm = try! Realm()
     
-    //creating obj to acceess APpDelegate and use its persistentContainer
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    //creating array of objects of type Results, which comes from realm and is auto-updating
+    var listArray: Results<Category>?
     
     //MARK: - Configuring the tableview
     
     //number of rows in tableview
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return listArray.count
+        return listArray?.count ?? 1
     }
     
     //cells currently being displayed
@@ -41,7 +40,7 @@ class CategoryViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SummarizingLists", for: indexPath)
         
         //displaying the string stored in "listName" parameter as the cell content
-        cell.textLabel?.text = listArray[indexPath.row].listName
+        cell.textLabel?.text = listArray?[indexPath.row].listName ?? "No category added"
         
         return cell
     }
@@ -59,13 +58,16 @@ class CategoryViewController: UITableViewController {
         let action = UIAlertAction(title: "OK", style: .default) { (action) in
             print("user tapped to create new list")
             
-            let newList = NewList(context: self.context)
+            //step 2: remove initialization of self.context when creating newList
+            let newList = Category()
             
-            newList.listName = userInput.text
+            if let inputFromUser = userInput.text {
+                newList.listName = inputFromUser
+            }
+    
+            //appending to list array is no longer a necessary command bc Result data type is auto-updating
             
-            self.listArray.append(newList)
-            
-            self.saveLists()
+            self.saveLists(with: newList)
         }
         
         
@@ -83,19 +85,24 @@ class CategoryViewController: UITableViewController {
     }
     
     //MARK: - Saving and loading items
-    func saveLists(){
-        
-        do {try context.save()}
-        catch {print("error saving context: \(error)")}
+    func saveLists(with newList: Category){
+        //step 3: save data to realm now, allow saveLists to have an input
+        do {
+            try realm.write {
+                realm.add(newList)
+            }
+        } catch {
+            print("error saving list: \(error)")
+        }
         
         self.tableView.reloadData()
     }
     
     
-    func loadLists(with request: NSFetchRequest<NewList> = NewList.fetchRequest()){
-        
-        do{listArray = try context.fetch(request)}
-        catch{print("error loading items: \(error)")}
+    func loadLists(){
+        //loading all data that is a Category() object
+        listArray = realm.objects(Category.self)
+            //this returns a data type called "Results", which is auto-updating container
     }
     
     
@@ -112,7 +119,7 @@ class CategoryViewController: UITableViewController {
         let destinationVC = segue.destination as! ToDoListViewController
         
         if let indexPath = tableView.indexPathForSelectedRow{
-            destinationVC.selectCategory = listArray[indexPath.row]
+            destinationVC.selectCategory = listArray?[indexPath.row]
         }
     }
     
