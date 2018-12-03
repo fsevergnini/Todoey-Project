@@ -8,12 +8,13 @@
 
 import UIKit
 import RealmSwift
+import SwipeCellKit
 
 class CategoryViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        tableView.rowHeight = 60.0
         loadLists()
     }
     
@@ -37,13 +38,17 @@ class CategoryViewController: UITableViewController {
         //first call: before viewDidLoad. Other calls when reloadData() is used
         
         //creating cell. withIdentifier must match the tableView name, seen in Table View Cell -> Identifier
-        let cell = tableView.dequeueReusableCell(withIdentifier: "SummarizingLists", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "SummarizingLists", for: indexPath) as! SwipeTableViewCell
         
         //displaying the string stored in "listName" parameter as the cell content
         cell.textLabel?.text = listArray?[indexPath.row].listName ?? "No category added"
         
+        //swipeTableViewCell delegate
+        cell.delegate = self
+        
         return cell
     }
+
     
     //MARK: - Creating a new list by pressing "add" in top right corner
     @IBAction func addButtonPressed(_ sender: Any) {
@@ -121,6 +126,39 @@ class CategoryViewController: UITableViewController {
         if let indexPath = tableView.indexPathForSelectedRow{
             destinationVC.selectCategory = listArray?[indexPath.row]
         }
+    }
+    
+}
+
+extension CategoryViewController: SwipeTableViewCellDelegate {
+    
+    //deletng by swiping left and tapping in the delete icon
+    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+        
+        guard orientation == .right else { return nil }
+        
+        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
+            print("deleting row number \(indexPath.row)")
+            
+            do {
+            try self.realm.write {
+                self.realm.delete(self.listArray![indexPath.row])
+                }} catch {
+                    print("error at editActionsForRowAt: \(error)")
+            }
+        }
+        
+        // customize the action appearance
+        deleteAction.image = UIImage(named: "delete")
+        return [deleteAction]
+    }
+    
+    //allows item to be deleted by swiping all the way to the left
+    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
+        var options = SwipeOptions()
+        options.expansionStyle = .destructive
+        return options
+
     }
     
 }

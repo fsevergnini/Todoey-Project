@@ -54,11 +54,13 @@ class ToDoListViewController: UITableViewController {
         //creating cell. withIdentifier must match cell name seen in document outline
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
-        //passing the string stored in todoItems.ItemObject.ItemContent to the cells
-        cell.textLabel?.text = todoItems?[indexPath.row].itemName ?? "No items added yet"
-        
-        //defining if cells should have a checkmark or not, using ternary:
-        cell.accessoryType = todoItems?[indexPath.row].checked ?? false ? .checkmark : .none
+        if let item = todoItems?[indexPath.row]{
+            cell.textLabel?.text = item.itemName
+            
+            cell.accessoryType = item.checked ? .checkmark : .none
+        } else {
+            cell.textLabel?.text = "No Items Added"
+        }
         
         return cell
     }
@@ -162,21 +164,21 @@ class ToDoListViewController: UITableViewController {
 extension ToDoListViewController: UISearchBarDelegate {
 
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-
-        todoItems = todoItems?.filter("title CONTAINS %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
-        //itemName is the parameter that will be used for sorting
         
-        tableView.reloadData()
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
+            //itemName is the parameter that will be used for sorting
+        
+        //tableView.reloadData()
 
     }
 
 
     //this is called whenever there is a change in text in searchbar. allows clear icon to resume the regular list
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        //condition: search bar text count goes down to 0
         if searchBar.text?.count == 0 {
             loadItems()
                 //loadItems already sets to sort items based on title
-            
             
             //placing the cancellation of the search option in the foreground
             DispatchQueue.main.async {
