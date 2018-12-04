@@ -10,7 +10,7 @@ import UIKit
 import RealmSwift
 
 //when creating a class that inherits from UITVC, there is no need to implement the TV protocols, delegate or datasource, delegate is seen already as this own class
-class ToDoListViewController: UITableViewController {
+class ToDoListViewController: SwipeTableViewController {
 
     //MARK: - Declaring global variables
     
@@ -27,13 +27,16 @@ class ToDoListViewController: UITableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
     
-    //creting an array of objects of type Results, each obj in array is one item in list
+    //creating an array of objects of type Results, each obj in array is one item in list
     var todoItems: Results<Item>?
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        //redefining row size to fit trash icon more easily
+        tableView.rowHeight = 60.0
+        
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
         //searchBar.delegate = self
@@ -50,18 +53,23 @@ class ToDoListViewController: UITableViewController {
     //set properties of cells that are currently being displayed
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         //first call: when tableview gets loaded. Ad taht point, no item is loaded yet, even viewDidLoad. other calls: whenever tableView.reloadData() happens
-        
-        //creating cell. withIdentifier must match cell name seen in document outline
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-        
+
+        //creating cells based on super class
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+
+        //adding message to blank lists
         if let item = todoItems?[indexPath.row]{
             cell.textLabel?.text = item.itemName
-            
+
             cell.accessoryType = item.checked ? .checkmark : .none
-        } else {
-            cell.textLabel?.text = "No Items Added"
+            
+            let test = Int(todoItems!.count)
+            print("\n \n \n ++++++++++++++++ \(test) ++++++++++++++ \n \n \n")
+            if test == 0 {
+                cell.textLabel?.text = "No Items Added"
+            }
         }
-        
+
         return cell
     }
     
@@ -119,9 +127,9 @@ class ToDoListViewController: UITableViewController {
                 } catch {
                     print("Error in didAddNewItem when trying to write data in realm \(error)")
                 }
-            
-            print(newItem.currentDateTime)
-            print("\n +++++++++++++++++++")
+                
+//            //printing info of date and time after 1970 (in seconds)
+//            print(newItem.currentDateTime)
             }
 
             self.tableView.reloadData()
@@ -144,7 +152,7 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    //MARK: - Save and load items
+    //MARK: - Save, load and delete items
     
     func loadItems(){
 
@@ -158,36 +166,57 @@ class ToDoListViewController: UITableViewController {
         //todoItems = selectCategory?.items.sorted(byKeyPath: "currentDateTime", ascending: true)
         tableView.reloadData()
     }
-}
 
-//MARK: - Extending class to include Search Bar methods
-extension ToDoListViewController: UISearchBarDelegate {
-
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        
-        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
-            //itemName is the parameter that will be used for sorting
-        
-        //tableView.reloadData()
-
-    }
-
-
-    //this is called whenever there is a change in text in searchbar. allows clear icon to resume the regular list
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        //condition: search bar text count goes down to 0
-        if searchBar.text?.count == 0 {
-            loadItems()
-                //loadItems already sets to sort items based on title
-            
-            //placing the cancellation of the search option in the foreground
-            DispatchQueue.main.async {
-                //DispatchQueue assigns projects to different threads
-                //actions here will happen in the main thread
-
-                //cancelling search operation and hiding keyboard agian
-                searchBar.resignFirstResponder()
-            }
+    //deleting items
+    override func updateModel(at indexPath: IndexPath) {
+        do {
+            try self.realm.write {
+                self.realm.delete(self.todoItems![indexPath.row])
+            }} catch {
+                print("error at editActionsForRowAt: \(error)")
         }
     }
 }
+
+
+//    //deleting items using fct declared in super class
+//override func updateModel(at indexPath: IndexPath) {
+////    do {
+////        try self.realm.write {
+////            self.realm.delete(self.listArray![indexPath.row])
+////        }} catch {
+////            print("error at editActionsForRowAt: \(error)")
+////    }
+//}
+
+////MARK: - Extending class to include Search Bar methods
+//extension ToDoListViewController: UISearchBarDelegate {
+//
+//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+//
+//        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
+//            //itemName is the parameter that will be used for sorting
+//
+//        //tableView.reloadData()
+//
+//    }
+//
+//
+//    //this is called whenever there is a change in text in searchbar. allows clear icon to resume the regular list
+//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+//        //condition: search bar text count goes down to 0
+//        if searchBar.text?.count == 0 {
+//            loadItems()
+//                //loadItems already sets to sort items based on title
+//
+//            //placing the cancellation of the search option in the foreground
+//            DispatchQueue.main.async {
+//                //DispatchQueue assigns projects to different threads
+//                //actions here will happen in the main thread
+//
+//                //cancelling search operation and hiding keyboard agian
+//                searchBar.resignFirstResponder()
+//            }
+//        }
+//    }
+//}

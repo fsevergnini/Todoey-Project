@@ -8,13 +8,15 @@
 
 import UIKit
 import RealmSwift
-import SwipeCellKit
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //redefining row size to fit trash icon more easily
         tableView.rowHeight = 60.0
+        
         loadLists()
     }
     
@@ -37,14 +39,11 @@ class CategoryViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         //first call: before viewDidLoad. Other calls when reloadData() is used
         
-        //creating cell. withIdentifier must match the tableView name, seen in Table View Cell -> Identifier
-        let cell = tableView.dequeueReusableCell(withIdentifier: "SummarizingLists", for: indexPath) as! SwipeTableViewCell
+        //using a cell that inherits from superclass SwipeTableVC. "super" triggers code to go to cellForRowAt in super class. This will receive the "return cell" declared in super class
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        //displaying the string stored in "listName" parameter as the cell content
-        cell.textLabel?.text = listArray?[indexPath.row].listName ?? "No category added"
-        
-        //swipeTableViewCell delegate
-        cell.delegate = self
+        //adding a label indicating there are no lists created
+        cell.textLabel?.text = listArray?[indexPath.row].listName ?? "No lists added yet"
         
         return cell
     }
@@ -89,9 +88,9 @@ class CategoryViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    //MARK: - Saving and loading items
+    //MARK: - Saving, loading, deleting items
     func saveLists(with newList: Category){
-        //step 3: save data to realm now, allow saveLists to have an input
+        //save data to realm now, allow saveLists to have an input
         do {
             try realm.write {
                 realm.add(newList)
@@ -111,6 +110,16 @@ class CategoryViewController: UITableViewController {
     }
     
     
+    //deleting item in realm database
+    override func updateModel(at indexPath: IndexPath) {
+        do {
+            try self.realm.write {
+                self.realm.delete(self.listArray![indexPath.row])
+            }} catch {
+                print("error at editActionsForRowAt: \(error)")
+        }
+    }
+    
     //MARK: - Tableview Delegate methods - what happens when we click in one of the cells
     
     //what happens when user selects an item in root list
@@ -126,39 +135,6 @@ class CategoryViewController: UITableViewController {
         if let indexPath = tableView.indexPathForSelectedRow{
             destinationVC.selectCategory = listArray?[indexPath.row]
         }
-    }
-    
-}
-
-extension CategoryViewController: SwipeTableViewCellDelegate {
-    
-    //deletng by swiping left and tapping in the delete icon
-    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-        
-        guard orientation == .right else { return nil }
-        
-        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
-            print("deleting row number \(indexPath.row)")
-            
-            do {
-            try self.realm.write {
-                self.realm.delete(self.listArray![indexPath.row])
-                }} catch {
-                    print("error at editActionsForRowAt: \(error)")
-            }
-        }
-        
-        // customize the action appearance
-        deleteAction.image = UIImage(named: "delete")
-        return [deleteAction]
-    }
-    
-    //allows item to be deleted by swiping all the way to the left
-    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
-        var options = SwipeOptions()
-        options.expansionStyle = .destructive
-        return options
-
     }
     
 }
