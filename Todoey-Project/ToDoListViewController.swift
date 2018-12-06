@@ -34,9 +34,6 @@ class ToDoListViewController: SwipeTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //redefining row size to fit trash icon more easily
-        tableView.rowHeight = 60.0
-        
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
         //searchBar.delegate = self
@@ -60,11 +57,15 @@ class ToDoListViewController: SwipeTableViewController {
         //adding message to blank lists
         if let item = todoItems?[indexPath.row]{
             cell.textLabel?.text = item.itemName
-
+            
+            //adding check/unchecked data
             cell.accessoryType = item.checked ? .checkmark : .none
             
+            //assigning color information to cell
+            cell.backgroundColor = UIColor(hexString: item.itemColorHex)
+            
             let test = Int(todoItems!.count)
-            print("\n \n \n ++++++++++++++++ \(test) ++++++++++++++ \n \n \n")
+            //print("\n \n \n ++++++++++++++++ \(test) ++++++++++++++ \n \n \n")
             if test == 0 {
                 cell.textLabel?.text = "No Items Added"
             }
@@ -118,6 +119,7 @@ class ToDoListViewController: SwipeTableViewController {
                 //creating new item to be appended
                 let newItem = Item()
                 newItem.itemName = userInput.text ?? ""
+                newItem.itemColorHex = UIColor.randomFlat.hexValue()
                 
                 do {
                     try self.realm.write {
@@ -169,54 +171,46 @@ class ToDoListViewController: SwipeTableViewController {
 
     //deleting items
     override func updateModel(at indexPath: IndexPath) {
-        do {
-            try self.realm.write {
-                self.realm.delete(self.todoItems![indexPath.row])
-            }} catch {
-                print("error at editActionsForRowAt: \(error)")
+        
+        if (todoItems?[indexPath.row]) != nil{
+            do {
+                try self.realm.write {
+                    self.realm.delete(self.todoItems![indexPath.row])
+                }} catch {
+                    print("error at editActionsForRowAt: \(error)")
+            }
         }
     }
 }
 
+//MARK: - Extending class to include Search Bar methods
+extension ToDoListViewController: UISearchBarDelegate {
 
-//    //deleting items using fct declared in super class
-//override func updateModel(at indexPath: IndexPath) {
-////    do {
-////        try self.realm.write {
-////            self.realm.delete(self.listArray![indexPath.row])
-////        }} catch {
-////            print("error at editActionsForRowAt: \(error)")
-////    }
-//}
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
 
-////MARK: - Extending class to include Search Bar methods
-//extension ToDoListViewController: UISearchBarDelegate {
-//
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//
-//        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
-//            //itemName is the parameter that will be used for sorting
-//
-//        //tableView.reloadData()
-//
-//    }
-//
-//
-//    //this is called whenever there is a change in text in searchbar. allows clear icon to resume the regular list
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        //condition: search bar text count goes down to 0
-//        if searchBar.text?.count == 0 {
-//            loadItems()
-//                //loadItems already sets to sort items based on title
-//
-//            //placing the cancellation of the search option in the foreground
-//            DispatchQueue.main.async {
-//                //DispatchQueue assigns projects to different threads
-//                //actions here will happen in the main thread
-//
-//                //cancelling search operation and hiding keyboard agian
-//                searchBar.resignFirstResponder()
-//            }
-//        }
-//    }
-//}
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
+            //itemName is the parameter that will be used for sorting
+
+        //tableView.reloadData()
+
+    }
+
+
+    //this is called whenever there is a change in text in searchbar. allows clear icon to resume the regular list
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        //condition: search bar text count goes down to 0
+        if searchBar.text?.count == 0 {
+            loadItems()
+                //loadItems already sets to sort items based on title
+
+            //placing the cancellation of the search option in the foreground
+            DispatchQueue.main.async {
+                //DispatchQueue assigns projects to different threads
+                //actions here will happen in the main thread
+
+                //cancelling search operation and hiding keyboard agian
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
+}

@@ -8,14 +8,13 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
+
 
 class CategoryViewController: SwipeTableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        //redefining row size to fit trash icon more easily
-        tableView.rowHeight = 60.0
         
         loadLists()
     }
@@ -27,6 +26,7 @@ class CategoryViewController: SwipeTableViewController {
     
     //creating array of objects of type Results, which comes from realm and is auto-updating
     var listArray: Results<Category>?
+    
     
     //MARK: - Configuring the tableview
     
@@ -45,6 +45,9 @@ class CategoryViewController: SwipeTableViewController {
         //adding a label indicating there are no lists created
         cell.textLabel?.text = listArray?[indexPath.row].listName ?? "No lists added yet"
         
+        //adding background color. If there is no color info in listArray, it will add a random color
+        cell.backgroundColor = UIColor(hexString: listArray?[indexPath.row].categoryColorHex ?? UIColor.randomFlat.hexValue())
+        
         return cell
     }
 
@@ -61,15 +64,15 @@ class CategoryViewController: SwipeTableViewController {
         //handling input from user in the alert box
         let action = UIAlertAction(title: "OK", style: .default) { (action) in
             print("user tapped to create new list")
-            
-            //step 2: remove initialization of self.context when creating newList
+            //newList variable will be used to save user input in database using realm
             let newList = Category()
             
             if let inputFromUser = userInput.text {
                 newList.listName = inputFromUser
+                
+                //assigning a random color code to newList, which will be loaded to the cell later
+                newList.categoryColorHex = String(UIColor.randomFlat.hexValue())
             }
-    
-            //appending to list array is no longer a necessary command bc Result data type is auto-updating
             
             self.saveLists(with: newList)
         }

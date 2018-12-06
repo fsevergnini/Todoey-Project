@@ -12,6 +12,9 @@ import RealmSwift
 class Category: Object {
     @objc dynamic var listName = ""
     
+    //stores category color info in hexadecimal 
+    @objc dynamic var categoryColorHex = ""
+    
     //forward relationship between data types
     let items = List<Item>()
         //List is a type from RealSwift, very similar to an array

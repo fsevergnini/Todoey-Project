@@ -15,8 +15,11 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        //redefining row size to fit trash icon more easily
+        tableView.rowHeight = 60.0
         
-        
+        //removing separator between rows
+        tableView.separatorStyle = .none
     }
     
     
