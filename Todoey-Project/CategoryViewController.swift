@@ -13,10 +13,16 @@ import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
 
+    //MARK: - view functions
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         loadLists()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        navigationController?.navigationBar.barTintColor = UIColor(hexString: "#00c2ff")
     }
     
     //MARK: - Global variables for CategoryViewController
@@ -27,7 +33,6 @@ class CategoryViewController: SwipeTableViewController {
     //creating array of objects of type Results, which comes from realm and is auto-updating
     var listArray: Results<Category>?
     
-    
     //MARK: - Configuring the tableview
     
     //number of rows in tableview
@@ -35,7 +40,7 @@ class CategoryViewController: SwipeTableViewController {
         return listArray?.count ?? 1
     }
     
-    //cells currently being displayed
+    //cells currently being displayed. This is loaded when info needs to be retrieved from database or when user taps to create new list
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         //first call: before viewDidLoad. Other calls when reloadData() is used
         
@@ -71,7 +76,7 @@ class CategoryViewController: SwipeTableViewController {
                 newList.listName = inputFromUser
                 
                 //assigning a random color code to newList, which will be loaded to the cell later
-                newList.categoryColorHex = String(UIColor.randomFlat.hexValue())
+                newList.categoryColorHex = self.assignRandomColor()
             }
             
             self.saveLists(with: newList)
@@ -128,6 +133,9 @@ class CategoryViewController: SwipeTableViewController {
     //what happens when user selects an item in root list
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "goToList", sender: self)
+        
+        //by adding deselectRow, the row selected doesn't stay grayed out forever. Otherwise, when going back to list menu, the chosen list is gray instead of having its original color
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
     //preparing segue
@@ -137,7 +145,23 @@ class CategoryViewController: SwipeTableViewController {
         
         if let indexPath = tableView.indexPathForSelectedRow{
             destinationVC.selectCategory = listArray?[indexPath.row]
+            
         }
+    }
+    
+    //randomly returns the hexadecimal value corresponding to one of the light flat colors from Chameleon Framework
+    func assignRandomColor() -> String {
+        
+        //array containing the fla colors
+        let randomColorVector = [UIColor.flatRed.hexValue(), UIColor.flatBlue.hexValue(), UIColor.flatGreen.hexValue(),
+                            UIColor.flatGray.hexValue(), UIColor.flatLime.hexValue(), UIColor.flatMint.hexValue(),
+                            UIColor.flatPink.hexValue(), UIColor.flatSand.hexValue(),
+                            UIColor.flatCoffee.hexValue(),
+                            UIColor.flatWhite.hexValue(), UIColor.flatOrange.hexValue(),
+                            UIColor.flatPurple.hexValue(), UIColor.flatYellow.hexValue(), UIColor.flatMagenta.hexValue()]
+        
+        //randomly selecting an element in array
+        return randomColorVector.randomElement()!
     }
     
 }

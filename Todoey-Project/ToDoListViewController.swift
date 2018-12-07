@@ -8,7 +8,7 @@
 
 import UIKit
 import RealmSwift
-
+//NSAttributedString.Key
 //when creating a class that inherits from UITVC, there is no need to implement the TV protocols, delegate or datasource, delegate is seen already as this own class
 class ToDoListViewController: SwipeTableViewController {
 
@@ -24,21 +24,60 @@ class ToDoListViewController: SwipeTableViewController {
            loadItems()
         }
     }
+
     
     @IBOutlet weak var searchBar: UISearchBar!
     
     //creating an array of objects of type Results, each obj in array is one item in list
     var todoItems: Results<Item>?
     
-    
+    //MARK: - Loading view fcts
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        //print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        //searchBar.delegate = self
+        searchBar.delegate = self
         
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        
+        //defining the color that will be used for all the items
+        let categoryColor = UIColor(hexString: selectCategory?.categoryColorHex ?? UIColor.randomFlat.hexValue())
+        
+        //defining black or white color that will be used to contrast with background
+        let contrastColor = UIColor(contrastingBlackOrWhiteColorOn: categoryColor ?? UIColor.white, isFlat: true)
+        
+        //changing navigation bar tint color
+        navigationController?.navigationBar.barTintColor = categoryColor
+        
+        //changing color of todoey icon
+        navigationController?.navigationBar.tintColor = contrastColor
+        
+        //change list title color and the + sign color
+        navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : contrastColor]
+        
+        //changing searchbar tint color
+        searchBar.barTintColor = categoryColor
+        
+        //change searchBar border's color and border width
+        searchBar.layer.borderColor = categoryColor?.cgColor
+        searchBar.layer.borderWidth = 3
+        
+        //changing the search bar's textfield properties: background color and text color
+        let searchTextField = searchBar.value(forKey: "searchField") as! UITextField
+        searchTextField.backgroundColor = categoryColor?.darken(byPercentage: 0.2)
+        searchTextField.textColor = contrastColor
+        
+        //changing placeholder color (text in seachbar before user types anything
+        searchTextField.attributedPlaceholder = NSAttributedString(string: "Search", attributes: [NSAttributedString.Key.foregroundColor: contrastColor])
+        
+        //changing title that appears at the top, after list is loaded
+        title = selectCategory?.listName ?? "Todoey"
+        
+    }
+    
     
     //MARK: - Configuring tableview
     
@@ -62,13 +101,15 @@ class ToDoListViewController: SwipeTableViewController {
             cell.accessoryType = item.checked ? .checkmark : .none
             
             //assigning color information to cell
-            cell.backgroundColor = UIColor(hexString: item.itemColorHex)
+            //cell.backgroundColor = UIColor(hexString: item.itemColorHex)
             
-            let test = Int(todoItems!.count)
-            //print("\n \n \n ++++++++++++++++ \(test) ++++++++++++++ \n \n \n")
-            if test == 0 {
-                cell.textLabel?.text = "No Items Added"
-            }
+            //assigning color information to cells based on list color, and making it darker depending on row index
+            let cellColor = UIColor(hexString: selectCategory?.categoryColorHex ?? UIColor.randomFlat.hexValue())?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems!.count))
+            cell.backgroundColor = cellColor!
+            
+            //defining if text should be black or white to contrast with background
+            cell.textLabel?.textColor = UIColor(contrastingBlackOrWhiteColorOn: cellColor!, isFlat: true)
+            
         }
 
         return cell
@@ -119,7 +160,7 @@ class ToDoListViewController: SwipeTableViewController {
                 //creating new item to be appended
                 let newItem = Item()
                 newItem.itemName = userInput.text ?? ""
-                newItem.itemColorHex = UIColor.randomFlat.hexValue()
+                //newItem.itemColorHex = UIColor.randomFlat.hexValue()
                 
                 do {
                     try self.realm.write {
@@ -188,7 +229,7 @@ extension ToDoListViewController: UISearchBarDelegate {
 
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
 
-        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
+        todoItems = todoItems?.filter("itemName CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
             //itemName is the parameter that will be used for sorting
 
         //tableView.reloadData()
