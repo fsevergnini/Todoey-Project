@@ -26,7 +26,7 @@ class ToDoListViewController: SwipeTableViewController {
     }
 
     
-    @IBOutlet weak var searchBar: UISearchBar!
+    //@IBOutlet weak var searchBar: UISearchBar!
     
     //creating an array of objects of type Results, each obj in array is one item in list
     var todoItems: Results<Item>?
@@ -37,7 +37,7 @@ class ToDoListViewController: SwipeTableViewController {
         
         //print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        searchBar.delegate = self
+        //searchBar.delegate = self
         
     }
     
@@ -58,20 +58,20 @@ class ToDoListViewController: SwipeTableViewController {
         //change list title color and the + sign color
         navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : contrastColor]
         
-        //changing searchbar tint color
-        searchBar.barTintColor = categoryColor
+        //implementing Search Bar inside Navigation Bar
+        let searchController = UISearchController(searchResultsController: nil)
+
+        //sets the color of the "cancel" icon that appears when user invokes search bar
+        searchController.searchBar.tintColor = contrastColor
+
+        //setting text input by user to be black or white depending on the background
+        UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).defaultTextAttributes = [NSAttributedString.Key.foregroundColor : contrastColor]
+
+        //setting placeholder text and color to be black or white depending on backgorund
+        UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).attributedPlaceholder = NSAttributedString(string: "Search", attributes: [NSAttributedString.Key.foregroundColor: contrastColor])
         
-        //change searchBar border's color and border width
-        searchBar.layer.borderColor = categoryColor?.cgColor
-        searchBar.layer.borderWidth = 3
-        
-        //changing the search bar's textfield properties: background color and text color
-        let searchTextField = searchBar.value(forKey: "searchField") as! UITextField
-        searchTextField.backgroundColor = categoryColor?.darken(byPercentage: 0.2)
-        searchTextField.textColor = contrastColor
-        
-        //changing placeholder color (text in seachbar before user types anything
-        searchTextField.attributedPlaceholder = NSAttributedString(string: "Search", attributes: [NSAttributedString.Key.foregroundColor: contrastColor])
+        //assigning search bar to navigation bar
+        navigationItem.searchController = searchController
         
         //changing title that appears at the top, after list is loaded
         title = selectCategory?.listName ?? "Todoey"
@@ -224,34 +224,34 @@ class ToDoListViewController: SwipeTableViewController {
     }
 }
 
-//MARK: - Extending class to include Search Bar methods
+////MARK: - Extending class to include Search Bar methods
 extension ToDoListViewController: UISearchBarDelegate {
-
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-
-        todoItems = todoItems?.filter("itemName CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
-            //itemName is the parameter that will be used for sorting
-
-        //tableView.reloadData()
-
-    }
-
-
-    //this is called whenever there is a change in text in searchbar. allows clear icon to resume the regular list
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        //condition: search bar text count goes down to 0
-        if searchBar.text?.count == 0 {
-            loadItems()
-                //loadItems already sets to sort items based on title
-
-            //placing the cancellation of the search option in the foreground
-            DispatchQueue.main.async {
-                //DispatchQueue assigns projects to different threads
-                //actions here will happen in the main thread
-
-                //cancelling search operation and hiding keyboard agian
-                searchBar.resignFirstResponder()
-            }
-        }
-    }
+//
+//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+//
+//        todoItems = todoItems?.filter("itemName CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "itemName", ascending: true)
+//            //itemName is the parameter that will be used for sorting
+//
+//        //tableView.reloadData()
+//
+//    }
+//
+//
+//    //this is called whenever there is a change in text in searchbar. allows clear icon to resume the regular list
+//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+//        //condition: search bar text count goes down to 0
+//        if searchBar.text?.count == 0 {
+//            loadItems()
+//                //loadItems already sets to sort items based on title
+//
+//            //placing the cancellation of the search option in the foreground
+//            DispatchQueue.main.async {
+//                //DispatchQueue assigns projects to different threads
+//                //actions here will happen in the main thread
+//
+//                //cancelling search operation and hiding keyboard agian
+//                searchBar.resignFirstResponder()
+//            }
+//        }
+//    }
 }
